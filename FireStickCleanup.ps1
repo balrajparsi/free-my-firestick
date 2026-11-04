@@ -4,12 +4,13 @@
 
 .DESCRIPTION
   A menu-driven tool. Nothing happens without you choosing it, and every removal asks first.
-    1. Storage report      - free space and the biggest apps (app + data + cache)
+    1. Storage report      - free space, the biggest apps, cache total, leftover installer files
     2. Clear all caches    - frees cache space for every app (no logins or settings lost)
     3. Remove apps         - pick apps YOU installed to uninstall
-    4. Turn off extras     - turn off optional Amazon ads/telemetry apps (reversible)
-    5. Restore extras      - turn back on everything option 4 turned off
-  Never touches: the Amazon home screen, Settings, Wi-Fi, keyboard, inputs, or system updates.
+    4. Turn off extras     - Amazon ads, telemetry and unused apps, in groups (reversible)
+    5. Restore             - turn back on everything options 4 and 6 changed
+    6. Faster menus        - animations at 0.5x (reversible)
+  Never touches: the Amazon home screen, Settings, Wi-Fi, keyboard, inputs, the Appstore, or system updates.
 
 .EXAMPLE
   .\FireStickCleanup.ps1 -Ip 192.168.1.50
@@ -30,24 +31,64 @@ $ErrorActionPreference = 'Stop'
 $Target = "${Ip}:$Port"
 $LogFile = Join-Path $PSScriptRoot "firestick-turned-off.json"
 
-# Optional Amazon extras. Each is only touched if it exists on your Fire Stick.
-$Extras = [ordered]@{
-    'com.amazon.kso'                  = 'Special Offers ad service (sponsored banners / screensaver ads)'
-    'com.amazon.device.sale.service'  = 'Deals and promotions service'
-    'com.amazon.hedwig'               = 'Amazon promo push notifications'
-    'com.amazon.client.metrics'       = 'Usage metrics upload (telemetry)'
-    'com.amazon.device.crashmanager'  = 'Crash report upload (telemetry)'
-    'com.amazon.bueller.photos'       = 'Amazon Photos app'
-    'com.amazon.ags.app'              = 'Amazon GameCircle (old games service)'
-    'com.amazon.awvflingreceiver'     = 'Fling video from phone (rarely used)'
+# Optional Amazon extras, in groups. Only packages that exist and are on are offered. Tested on a Fire TV Stick 4K
+# (Fire OS 8.1): the home screen, voice search, the Appstore and updates keep working with all of these off.
+# Some are protected by Fire OS (e.g. crash reports): those are skipped and stay on.
+# PerItem = ask about each app separately instead of the whole group.
+$ExtraGroups = @(
+    @{ Name = 'Ads and promotions'; Rec = $true
+       Info = 'Special Offers, advertising ID, ad deep-links, on-screen content recognition, deals, promo notifications, autoplaying trailers'
+       Packages = 'com.amazon.kso', 'com.amazon.kso.blackbird', 'com.amazon.hybridadidservice', 'com.amazon.tv.acr',
+                  'com.amazon.ftvads.deeplinking', 'com.amazon.device.sale.service', 'com.amazon.hedwig', 'com.amazon.sneakpeek' }
+    @{ Name = 'Amazon Shopping'; Rec = $true
+       Info = 'The Shopping app and its background service'
+       Packages = 'com.amazon.shoptv.firetv.client', 'com.amazon.shoptv.client' }
+    @{ Name = 'Usage and diagnostics uploads'; Rec = $true
+       Info = 'Metrics, telemetry, performance and log collectors that send data to Amazon'
+       Packages = 'com.amazon.client.metrics', 'com.amazon.device.crashmanager', 'com.amazon.device.metrics',
+                  'com.amazon.device.telemetry.emitter', 'com.amazon.wirelessmetrics.service', 'com.amazon.perfcollection',
+                  'com.amazon.perfc', 'com.amazon.device.logmanager', 'com.amazon.dp.logger',
+                  'com.amazon.neo.minerva.logcat', 'com.amazon.logan' }
+    @{ Name = 'Tutorials and release notes'; Rec = $true
+       Info = 'Setup tutorials, "what''s new" notes, early-access popups'
+       Packages = 'com.amazon.storm.lightning.tutorial', 'com.amazon.tmm.tutorial', 'com.amazon.tv.releasenotes',
+                  'com.amazon.tv.earlyaccess' }
+    @{ Name = 'Ambient Experience'; Rec = $true
+       Info = 'Art/widget screensaver: often the biggest RAM user and ~1 GB of storage. The plain screensaver takes over'
+       Packages = 'com.amazon.tv.ftvambient' }
+    @{ Name = 'Amazon apps you may not use'; Rec = $false; PerItem = $true
+       Info = 'Asked one by one'
+       Packages = 'com.amazon.bueller.photos', 'com.amazon.bueller.music', 'com.amazon.minitv.android.app',
+                  'com.amazon.gamehub', 'com.amazon.ags.app', 'com.amazon.awvflingreceiver', 'com.amazon.cloud9',
+                  'com.amazon.spiderpork', 'com.amazon.tv.livetv' }
+    @{ Name = 'Smart Home and Echo audio extras'; Rec = $false
+       Info = 'Smart-home camera map and Echo speaker audio settings. Keep if you have Echo speakers or cameras'
+       Packages = 'com.amazon.smarthomemapviewapp', 'com.amazon.audiohome' }
+    @{ Name = 'Amazon Kids'; Rec = $false
+       Info = 'Kids profiles and time limits. Turn off only if no kids use this TV'
+       Packages = 'com.amazon.tahoe' }
+    @{ Name = 'Alexa alert and notification popups'; Rec = $false
+       Info = 'Timers, reminders and notifications on the TV. Voice search keeps working'
+       Packages = 'com.amazon.tv.alexaalerts', 'com.amazon.tv.alexanotifications' }
+)
+
+# Friendly names for the per-item prompts.
+$Names = @{
+    'com.amazon.bueller.photos' = 'Amazon Photos'; 'com.amazon.bueller.music' = 'Amazon Music'
+    'com.amazon.minitv.android.app' = 'Amazon miniTV'; 'com.amazon.gamehub' = 'Games hub (Luna)'
+    'com.amazon.ags.app' = 'GameCircle (old games service)'; 'com.amazon.awvflingreceiver' = 'Fling video from phone'
+    'com.amazon.cloud9' = 'Silk Browser'; 'com.amazon.spiderpork' = 'Silk Browser launcher'
+    'com.amazon.tv.livetv' = 'Live TV tab (antenna channel guide)'
 }
+
+$AnimationKeys = 'window_animation_scale', 'transition_animation_scale', 'animator_duration_scale'
 
 # Never offered for removal, whatever the user picks.
 $Protected = @(
     'com.amazon.tv.launcher', 'com.amazon.tv.settings', 'com.amazon.tv.settings.v2',
     'com.amazon.device.software.ota', 'com.amazon.tv.forcedotaupdater.v2',
     'com.amazon.wifilocker', 'com.amazon.tv.ime', 'com.amazon.tv.inputpreference.service',
-    'com.amazon.device.messaging', 'com.android.settings', 'com.android.systemui'
+    'com.amazon.device.messaging', 'com.amazon.venezia', 'com.android.settings', 'com.android.systemui'
 )
 
 function Write-Title($text) { Write-Host ""; Write-Host "== $text ==" -ForegroundColor Cyan }
@@ -72,6 +113,12 @@ function Confirm-Yes([string]$question) {
 }
 
 function Connect-FireStick {
+    if (-not (Get-Command adb -ErrorAction SilentlyContinue)) {
+        # Just installed with winget? Its folder isn't on PATH until PowerShell restarts, so look there too.
+        $wingetAdb = Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Filter adb.exe -Recurse -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+        if ($wingetAdb) { $env:Path = "$($wingetAdb.DirectoryName);$env:Path" }
+    }
     if (-not (Get-Command adb -ErrorAction SilentlyContinue)) {
         Write-Host "adb was not found. Install it with:  winget install Google.PlatformTools" -ForegroundColor Red
         Write-Host "then close and reopen PowerShell." -ForegroundColor Red
@@ -158,6 +205,7 @@ function Show-Report {
     $cacheTotal = ($sizes | Measure-Object Cache -Sum).Sum
     Write-Host ""
     Write-Host ("Cache across all apps: about {0} (option 2 clears it)." -f (Format-Size $cacheTotal))
+    Show-LeftoverFiles
 }
 
 function Clear-Caches {
@@ -204,33 +252,88 @@ function Read-Log {
 
 function Save-Log($entries) { $entries | ConvertTo-Json -Depth 3 | Set-Content -Path $LogFile -Encoding UTF8 }
 
+function Get-PackageList([string]$flags) {
+    (Sh "pm list packages $flags") -split "`n" | ForEach-Object { $_.Trim() -replace '^package:', '' } | Where-Object { $_ }
+}
+
+# Turns one package off and records it. Returns $true when it was turned off.
+function Disable-One([string]$pkg, [System.Collections.ArrayList]$log) {
+    $r = Sh "pm disable-user --user 0 $pkg"
+    $method = 'disable'
+    if ($r -match 'protected package') {
+        Write-Host "    $pkg is protected by Fire OS; it stays on." -ForegroundColor Yellow
+        return $false
+    }
+    if ($r -notmatch 'new state: disabled') {
+        # Some Fire OS versions refuse disable-user; removing for user 0 is the reversible alternative.
+        Write-Host "    Fire OS refused to turn off $pkg."
+        if (-not (Confirm-Yes "    Remove it for your profile instead? (reversible with option 5)")) { return $false }
+        $r = Sh "pm uninstall -k --user 0 $pkg"
+        $method = 'uninstall-user'
+        if ($r -notmatch 'Success') { Write-Host "    Not possible on this Fire Stick." -ForegroundColor Yellow; return $false }
+    }
+    [void]$log.Add([pscustomobject]@{ Package = $pkg; Method = $method; When = (Get-Date).ToString('s') })
+    Save-Log $log
+    return $true
+}
+
 function Disable-Extras {
     Write-Title "Turn off optional Amazon extras"
-    Write-Host "These are turned off for your profile only, not deleted. Option 5 brings them all back."
+    Write-Host "These are turned off, not deleted. Option 5 brings them all back."
     Write-Host "The record of what was turned off is saved next to this script: $LogFile"
-    $installed = (Sh "pm list packages") -split "`n" | ForEach-Object { $_.Trim() -replace '^package:', '' }
-    $disabled = (Sh "pm list packages -d") -split "`n" | ForEach-Object { $_.Trim() -replace '^package:', '' }
+    $enabled = @(Get-PackageList '-e')
     $log = [System.Collections.ArrayList]@(Read-Log)
-    $found = $false
-    foreach ($pkg in $Extras.Keys) {
-        if ($installed -notcontains $pkg -or $disabled -contains $pkg) { continue }
-        $found = $true
-        if (-not (Confirm-Yes ("  Turn off {0}  ({1})?" -f $pkg, $Extras[$pkg]))) { continue }
-        $r = Sh "pm disable-user --user 0 $pkg"
-        $method = 'disable'
-        if ($r -notmatch 'new state: disabled') {
-            # Newer Fire OS refuses disable-user for Amazon apps; removing for user 0 is the reversible alternative.
-            Write-Host "    Fire OS refused to turn it off ($r)."
-            if (-not (Confirm-Yes "    Remove it for your profile instead? (reversible with option 5)")) { continue }
-            $r = Sh "pm uninstall -k --user 0 $pkg"
-            $method = 'uninstall-user'
-            if ($r -notmatch 'Success') { Write-Host "    Not possible on this Fire Stick: $r" -ForegroundColor Yellow; continue }
+    $offered = $false; $count = 0
+    foreach ($g in $ExtraGroups) {
+        $present = @($g.Packages | Where-Object { $enabled -contains $_ })
+        if (-not $present) { continue }
+        $offered = $true
+        $tag = if ($g.Rec) { ' [recommended]' } else { '' }
+        Write-Host ""
+        Write-Host ("{0}{1}: {2}" -f $g.Name, $tag, $g.Info)
+        if ($g.PerItem) {
+            foreach ($p in $present) {
+                $label = if ($Names[$p]) { $Names[$p] } else { $p }
+                if (Confirm-Yes "  Turn off $label ?") { if (Disable-One $p $log) { $count++ } }
+            }
+        } elseif (Confirm-Yes ("  Turn off this group ({0} part(s))?" -f $present.Count)) {
+            foreach ($p in $present) { if (Disable-One $p $log) { $count++ } }
         }
-        [void]$log.Add([pscustomobject]@{ Package = $pkg; Method = $method; When = (Get-Date).ToString('s') })
-        Save-Log $log
-        Write-Host "    Done." -ForegroundColor Green
     }
-    if (-not $found) { Write-Host "Nothing to do: none of the extras are on, or this Fire Stick doesn't have them." }
+    if (-not $offered) { Write-Host "Nothing to do: the extras are already off, or this Fire Stick doesn't have them."; return }
+    Write-Host ""
+    Write-Host "Turned off $count part(s). Restart the Fire Stick to get the full benefit." -ForegroundColor Green
+}
+
+function Set-FastAnimations {
+    Write-Title "Faster menus"
+    Write-Host "Halves the time menus and screen transitions take to animate (1x to 0.5x). Option 5 sets it back."
+    if (-not (Confirm-Yes "Make menus faster?")) { return }
+    $log = [System.Collections.ArrayList]@(Read-Log)
+    foreach ($k in $AnimationKeys) {
+        $old = Sh "settings get global $k"
+        if ($old -eq '0.5') { continue }
+        if ($old -eq 'null' -or -not $old) { $old = '1.0' }
+        Sh "settings put global $k 0.5" | Out-Null
+        [void]$log.Add([pscustomobject]@{ Package = "global $k"; Method = 'setting'; Value = $old; When = (Get-Date).ToString('s') })
+    }
+    Save-Log $log
+    Write-Host "Done: animations now run at 0.5x." -ForegroundColor Green
+}
+
+function Show-LeftoverFiles {
+    # Installers left behind by Downloader and similar apps; the installed app doesn't need them.
+    # Trailing slash: /sdcard is a symlink, and find doesn't follow it otherwise.
+    $files = (Sh "find /sdcard/ -type f \( -iname '*.apk' -o -iname '*.xapk' -o -iname '*.apks' \) -exec ls -l {} \; 2>/dev/null") -split "`n" |
+        Where-Object { $_.Trim() }
+    if (-not $files) { return }
+    Write-Host ""
+    Write-Host "Leftover installer files (safe to delete once the app is installed):"
+    foreach ($f in $files) {
+        $p = $f.Trim() -split '\s+'
+        Write-Host ("  {0,9}  {1}" -f (Format-Size ([double]$p[4])), ($p[7..($p.Count - 1)] -join ' '))
+    }
+    Write-Host "  Delete them on the TV: open Downloader > Files, select the file, and choose Delete."
 }
 
 function Restore-Extras {
@@ -255,8 +358,9 @@ while ($true) {
     Write-Host "  1) Storage report"
     Write-Host "  2) Clear all app caches"
     Write-Host "  3) Remove apps you installed"
-    Write-Host "  4) Turn off optional Amazon ads/telemetry extras"
-    Write-Host "  5) Restore everything option 4 turned off"
+    Write-Host "  4) Turn off Amazon ads, telemetry and unused extras"
+    Write-Host "  5) Restore everything options 4 and 6 changed"
+    Write-Host "  6) Faster menus (animations 0.5x)"
     Write-Host "  Q) Quit"
     switch ((Read-Host "Choose").Trim().ToUpper()) {
         '1' { Show-Report }
@@ -264,7 +368,8 @@ while ($true) {
         '3' { Remove-UserApps }
         '4' { Disable-Extras }
         '5' { Restore-Extras }
+        '6' { Set-FastAnimations }
         'Q' { & adb disconnect $Target | Out-Null; Write-Host "Disconnected. Bye!"; return }
-        default { Write-Host "Pick 1-5 or Q." }
+        default { Write-Host "Pick 1-6 or Q." }
     }
 }
