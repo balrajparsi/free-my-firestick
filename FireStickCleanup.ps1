@@ -116,7 +116,10 @@ function Show-Space([string]$label) {
 }
 
 function Get-UserApps {
-    (Sh "pm list packages -3") -split "`n" | ForEach-Object { $_.Trim() -replace '^package:', '' } | Where-Object { $_ } | Sort-Object
+    # Skip Amazon's resource overlays (e.g. ...settings.v2.overlay.localisation.common): listed as user apps on
+    # Fire OS 8, but they hold system menu text, not anything you installed.
+    (Sh "pm list packages -3") -split "`n" | ForEach-Object { $_.Trim() -replace '^package:', '' } |
+        Where-Object { $_ -and $_ -notmatch '\.overlay\.' } | Sort-Object
 }
 
 function Get-AppSizes {
