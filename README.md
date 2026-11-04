@@ -12,8 +12,9 @@ Inspired by [Free My TV](https://github.com/simbasjungles/free-my-tv). MIT licen
 
 **On the Fire Stick**
 1. Settings → **My Fire TV** → **About** → select your device name **7 times** until it says you're a developer.
-2. Settings → My Fire TV → **Developer options** → turn on **ADB debugging**.
-3. Settings → My Fire TV → About → **Network**: write down the **IP address** (e.g. `192.168.1.50`).
+2. Settings → My Fire TV → **Developer options**. Your Stick has one of two switches:
+   - **ADB debugging** (older Fire OS): turn it on. Then Settings → My Fire TV → About → **Network** and write down the **IP address** (e.g. `192.168.1.50`).
+   - **Wireless debugging** (newer Fire OS): turn it on. If it asks *Allow wireless debugging on this network?*, tick *Always allow on this network* and choose **Allow**. Then open **Wireless debugging** and write down the **IP address & port** (e.g. `192.168.1.50:41235`).
 
 **On your PC** (PowerShell):
 ```powershell
@@ -28,6 +29,12 @@ From the folder this file is in:
 powershell -ExecutionPolicy Bypass -File .\FireStickCleanup.ps1 -Ip 192.168.1.50
 ```
 The first time, the TV asks **Allow USB debugging?**: tick *Always allow* and choose OK.
+
+**With Wireless debugging**, you pair once first. On the TV, open Wireless debugging → **Pair device with pairing code**. It shows an IP address & port and a 6-digit code. Leave that screen open, then run the script with both ports: `-Port` is the one from the main Wireless debugging screen, and `-PairPort` is the one from the pairing screen.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\FireStickCleanup.ps1 -Ip 192.168.1.50 -Port 41235 -PairPort 37099
+```
+Type the code when the script asks for it. After that, you can leave out `-PairPort`. The main port can change after a restart, so check it on the Wireless debugging screen each time.
 
 | Option | What it does | Risk |
 |---|---|---|

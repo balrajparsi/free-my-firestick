@@ -13,10 +13,17 @@
 
 .EXAMPLE
   .\FireStickCleanup.ps1 -Ip 192.168.1.50
+  Older Fire OS ("ADB debugging" switch): connects on port 5555.
+
+.EXAMPLE
+  .\FireStickCleanup.ps1 -Ip 192.168.1.50 -Port 41235 -PairPort 37099
+  Newer Fire OS ("Wireless debugging"): -Port is the port under "IP address & port", -PairPort the one shown
+  after "Pair device with pairing code". The script asks for the 6-digit code. Pairing is needed only once.
 #>
 param(
     [Parameter(Mandatory = $true)][string]$Ip,
-    [int]$Port = 5555
+    [int]$Port = 5555,
+    [int]$PairPort = 0
 )
 
 $ErrorActionPreference = 'Stop'
@@ -70,7 +77,16 @@ function Connect-FireStick {
         Write-Host "then close and reopen PowerShell." -ForegroundColor Red
         exit 1
     }
-    Write-Host "Connecting to $Target ... (on the TV, accept 'Allow USB debugging?' and tick 'Always allow')"
+    if ($PairPort -gt 0) {
+        $code = Read-Host "Pairing code shown on the TV"
+        $pair = (& adb pair "${Ip}:$PairPort" $code 2>&1 | Out-String).Trim()
+        Write-Host $pair
+        if ($pair -notmatch 'Successfully paired') {
+            Write-Host "Pairing failed. Open 'Pair device with pairing code' again on the TV and use the new port and code." -ForegroundColor Red
+            exit 1
+        }
+    }
+    Write-Host "Connecting to $Target ... (if the TV asks to allow debugging, tick 'Always allow' and choose Allow)"
     & adb connect $Target | Out-Null
     for ($i = 0; $i -lt 15; $i++) {
         $state = (& adb -s $Target get-state 2>&1 | Out-String).Trim()
