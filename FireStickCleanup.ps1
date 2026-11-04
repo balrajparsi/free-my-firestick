@@ -238,7 +238,8 @@ function Restore-Extras {
     $log = Read-Log
     if (-not $log) { Write-Host "Nothing recorded in $LogFile, so nothing to restore."; return }
     foreach ($e in $log) {
-        if ($e.Method -eq 'uninstall-user') { $r = Sh "cmd package install-existing $($e.Package)" }
+        if ($e.Method -eq 'setting') { $r = Sh "settings put $($e.Package) $($e.Value)"; $r = "set back to $($e.Value) $r" }
+        elseif ($e.Method -eq 'uninstall-user') { $r = Sh "cmd package install-existing $($e.Package)" }
         else { $r = Sh "pm enable $($e.Package)" }
         Write-Host ("  {0}: {1}" -f $e.Package, $r)
     }
