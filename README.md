@@ -1,55 +1,101 @@
+<div align="center">
+
 # Free My Fire Stick
 
-Free up space on your Amazon Fire TV Stick and make it look cleaner. It runs from your Windows PC over Wi-Fi with ADB. You don't need root, and everything it turns off can be turned back on.
+**Free up space and clear the clutter on your Amazon Fire TV.**
 
-Inspired by [Free My TV](https://github.com/simbasjungles/free-my-tv). © 2026 Balraj Parsi, all rights reserved: free to run on your own devices, but not to copy or redistribute. See [LICENSE](LICENSE).
+Fewer ads, no telemetry, faster menus, and only the apps you actually use.<br>
+Mac, Windows or Linux. No root. Every change can be undone.
 
-## Why not Free My TV?
+[Install](#install) · [What it does](#what-it-does) · [Make it look cleaner](#make-it-look-cleaner) · [Undo](#undo-everything) · [For AI assistants](CLAUDE.md)
 
-[Free My TV](https://github.com/simbasjungles/free-my-tv) installs on a Fire Stick, but only as an app you open. Amazon's home screen keeps the Home button, and the project won't turn off any Amazon app. It also doesn't free any space, because it's a home screen, not a cleaner. This tool covers the part it leaves out.
+</div>
 
-## 1. One-time setup
+## What you get
 
-**On the Fire Stick**
-1. Settings → **My Fire TV** → **About** → select your device name **7 times** until it says you're a developer.
-2. Settings → My Fire TV → **Developer options**. Your Stick has one of two switches:
-   - **ADB debugging** (older Fire OS): turn it on. Then Settings → My Fire TV → About → **Network** and write down the **IP address** (e.g. `192.168.1.50`).
-   - **Wireless debugging** (newer Fire OS): turn it on. If it asks *Allow wireless debugging on this network?*, tick *Always allow on this network* and choose **Allow**. Then open **Wireless debugging** and write down the **IP address & port** (e.g. `192.168.1.50:41235`).
+- **More space.** Clears every app's cache (often a few hundred MB), shows the biggest apps, and finds leftover
+  installer files from Downloader.
+- **Only your apps.** Lists the apps you installed, with their sizes, and uninstalls the ones you pick.
+- **Fewer ads.** Turns off Special Offers, the advertising ID, ad tracking of what's on screen, promo
+  notifications, and trailers that autoplay on the home screen.
+- **Less spying.** Turns off the background services that upload usage, performance and log data to Amazon.
+- **Less clutter.** Turns off Amazon Shopping, tutorials, "what's new" popups, and any Amazon apps you don't use
+  (Photos, Music, miniTV, Games, Silk, Live TV), each one only if you say yes.
+- **Faster.** The Ambient Experience screensaver is often the biggest memory user; turning it off frees RAM and
+  about 1 GB. Menus can animate twice as fast.
+- **Safe.** Amazon apps are turned off, never uninstalled. The home screen, Settings, the Appstore, system updates,
+  Wi-Fi, the remote and voice search are never touched. One command turns it all back on.
+- **Easy.** It finds your Fire TV on the Wi-Fi by itself, and downloads Google's official adb if you don't have it.
 
-**On your PC** (PowerShell):
-```powershell
-winget install Google.PlatformTools
+Tested on a Fire TV Stick 4K (Fire OS 8.1) with 14 apps: 610 MB freed, 27 Amazon extras turned off, more free RAM,
+and the home screen, Alexa, the Appstore and every streaming app kept working.
+
+## Install
+
+About five minutes. You need a Fire TV and a computer (Mac, Windows or Linux) on the same Wi-Fi.
+
+### On the Fire TV (every way)
+
+1. Settings → **My Fire TV** → **About** → select your device's name **7 times**, until it says you're a developer.
+2. Settings → My Fire TV → **Developer options** → turn on **ADB debugging**, or **Wireless debugging** on newer
+   Fire OS. If it asks *Allow wireless debugging on this network?*, tick *Always allow on this network* and choose
+   **Allow**. If it asks to restart, let it.
+
+### The easy way: an AI assistant
+
+Open an AI coding assistant ([Claude Code](https://claude.com/claude-code), Codex or another) on your computer and
+say:
+
+> Clean up my Fire Stick with Free My Fire Stick (github.com/balrajparsi/free-my-firestick).
+
+It downloads the tool, finds your Fire TV, shows you what's taking space, and asks before changing anything. When
+the TV asks *Allow USB debugging?*, tick *Always allow* and choose **Allow**.
+
+### Double-click
+
+1. Download this project: the green **Code** button → **Download ZIP**, then unzip it.
+2. Open the folder and double-click:
+   - **Mac:** `start.command` (the first time, right-click → **Open**, since it isn't from the App Store).
+   - **Windows:** `start.bat` (if Python is missing, it installs it; then double-click again).
+3. When the TV asks *Allow USB debugging?*, tick *Always allow* and choose **Allow**.
+
+If adb (Android's debugging tool) isn't on your computer, it offers to download Google's official copy into the
+folder. Nothing else to install.
+
+### The terminal way
+
+```bash
+git clone https://github.com/balrajparsi/free-my-firestick && cd free-my-firestick
+python3 firestick.py
 ```
-Close and reopen PowerShell afterwards.
+On Windows, use `py -3 firestick.py`. It finds the Fire TV by itself; if it can't, it asks for the IP address
+(Settings → My Fire TV → About → **Network**), or give it with `--ip 192.168.1.50`.
 
-## 2. Run it
-
-From the folder this file is in:
-```powershell
-powershell -ExecutionPolicy Bypass -File .\FireStickCleanup.ps1 -Ip 192.168.1.50
+**Wireless debugging and pairing.** Usually choosing *Allow* is enough. If it won't connect, pair once: on the TV,
+Wireless debugging → **Pair device with pairing code** (keep that screen open), then:
+```bash
+python3 firestick.py --ip 192.168.1.50 --port 41235 --pair-port 37099
 ```
-The first time, the TV asks **Allow USB debugging?**: tick *Always allow* and choose OK.
+`--port` is the port on the main Wireless debugging screen, `--pair-port` the one on the pairing screen, and you type
+the 6-digit code when asked.
 
-**With Wireless debugging**, you pair once first. On the TV, open Wireless debugging → **Pair device with pairing code**. It shows an IP address & port and a 6-digit code. Leave that screen open, then run the script with both ports: `-Port` is the one from the main Wireless debugging screen, and `-PairPort` is the one from the pairing screen.
-```powershell
-powershell -ExecutionPolicy Bypass -File .\FireStickCleanup.ps1 -Ip 192.168.1.50 -Port 41235 -PairPort 37099
-```
-Type the code when the script asks for it. After that, you can leave out `-PairPort`. The main port can change after a restart, so check it on the Wireless debugging screen each time.
+**On a Mac**, if it says `No route to host`, macOS is blocking the terminal from your network: allow it in System
+Settings → Privacy & Security → **Local Network**, then try again.
 
-**Try the simple way first.** On a Fire TV Stick 4K with Fire OS 8.1, choosing *Allow* on the Wireless debugging prompt was enough: the plain command (no `-Port`, no pairing) connected on port 5555.
+## What it does
 
-If you just installed adb and PowerShell still says it can't find it, the script looks in winget's folder by itself, so you don't have to reopen PowerShell.
+The menu:
 
 | Option | What it does | Risk |
 |---|---|---|
-| 1 Storage report | Free space, the 20 biggest apps, total cache size, and leftover installer files (`.apk`) from Downloader | None |
-| 2 Clear all caches | Deletes temporary cache files for every app | None (apps stay signed in) |
-| 3 Remove apps you installed | Lists your apps with their sizes and uninstalls the ones you pick, asking for each one | Deletes that app's data |
-| 4 Turn off Amazon extras | Goes through the groups below and asks about each one | Low. Saved to `firestick-turned-off.json` |
-| 5 Restore | Turns back on everything options 4 and 6 changed | None |
-| 6 Faster menus | Sets menu and transition animations to 0.5x | None |
+| 1 Storage report | Free space, the 20 biggest apps, cache size, leftover installer files, Amazon extras still on | None: changes nothing |
+| 2 Clear all app caches | Deletes temporary cache files for every app | None: apps stay signed in |
+| 3 Uninstall apps you installed | Lists your apps with sizes, uninstalls the ones you pick, asking for each | Deletes that app's data |
+| 4 Turn off Amazon extras | Goes through the groups below, asking about each | Low: recorded, undo with 5 |
+| 5 Restore | Turns back on everything 4 and 6 changed | None |
+| 6 Faster menus | Menu and transition animations at 0.5x | None: undo with 5 |
 
-### What option 4 offers
+Option 4's groups:
 
 | Group | What's in it | Suggested |
 |---|---|---|
@@ -57,36 +103,63 @@ If you just installed adb and PowerShell still says it can't find it, the script
 | Amazon Shopping | The Shopping app and its background service | Yes |
 | Usage and diagnostics uploads | 11 metrics, telemetry, performance and log collectors | Yes |
 | Tutorials and release notes | Setup tutorials, "what's new" notes, early-access popups | Yes |
-| Ambient Experience | The art and widget screensaver. On the test Stick it was the biggest RAM user and took 1 GB of storage | Yes |
-| Amazon apps you may not use | Photos, Music, miniTV, Games hub, GameCircle, Fling, Silk Browser, Live TV tab. Asked one at a time | Your call |
+| Ambient Experience | The art and widget screensaver (~1 GB, often the biggest RAM user) | Yes |
+| Amazon apps you may not use | Photos, Music, miniTV, Games hub, GameCircle, Fling, Silk Browser, Live TV tab, asked one at a time | Your call |
 | Smart Home and Echo audio extras | Smart-home camera map, Echo speaker audio settings | Only without Echo or cameras |
 | Amazon Kids | Kids profiles and time limits | Only if no kids use the TV |
-| Alexa alert and notification popups | Timers, reminders and notifications on the TV. Voice search keeps working | Your call |
+| Alexa alert and notification popups | Timers, reminders and notifications on the TV (voice search keeps working) | Your call |
 
-It never touches the Amazon home screen, Settings, Wi-Fi, the keyboard, inputs, the Appstore, or system updates. If you lose `firestick-turned-off.json`, an Amazon reset (Settings → My Fire TV → Reset to Factory Defaults) brings everything back.
+Fire OS protects a few of these (crash reports, some diagnostics, ad deep-links). The tool says so and leaves them on.
 
-Fire OS protects a few of these (on the test Stick: crash reports, two diagnostics services, and ad deep-links). The script says so and leaves them on. If Fire OS refuses for another reason, it offers to remove the app for your profile instead (`pm uninstall --user 0`), which option 5 can undo.
+**One task at a time**, for scripts and AI assistants:
 
-### Tested on
+```bash
+python3 firestick.py report                          # changes nothing
+python3 firestick.py clean                           # clear caches
+python3 firestick.py apps                            # list your apps, pick some to uninstall
+python3 firestick.py uninstall com.example.app       # uninstall by package name
+python3 firestick.py extras --list                   # what's still on
+python3 firestick.py extras --only ads telemetry     # turn off these groups
+python3 firestick.py fast-menus
+python3 firestick.py restore                         # undo everything
+python3 firestick.py find                            # Fire TVs on the Wi-Fi
+```
 
-A Fire TV Stick 4K (model AFTKRT, Fire OS 8.1.8.5) with 14 apps installed:
-- 610 MB of storage freed (400 MB of cache and 3 unused apps), plus a 66 MB leftover installer found.
-- 27 Amazon parts turned off. Free RAM went up even before a restart.
-- The home screen, voice search, the Appstore and all the streaming apps kept working.
+## Make it look cleaner
 
-## 3. Make it look cleaner (on the TV, 2 minutes)
+Amazon doesn't let a computer change these, so use the remote (two minutes):
 
-ADB can't change these settings, so set them with the remote:
+- **Your apps first:** hold **Home** → **Apps**, highlight an app, press **☰** → **Move to front**. Do your least
+  favorite first and your top favorite last, so it ends up first.
+- **No autoplaying trailers:** Settings → Preferences → **Featured Content** → turn off *Video Autoplay* and
+  *Audio Autoplay*.
+- **Fewer targeted ads:** Settings → Preferences → **Privacy Settings** → turn off *Device Usage Data*, *Collect App
+  Usage Data* and *Interest-based Ads*.
+- **Leftover installers:** open **Downloader** → **Files**, select the `.apk`, and choose **Delete**.
+- **Restart** when you're done: Settings → My Fire TV → **Restart**.
+- **Close the door:** turn **ADB debugging** / **Wireless debugging** back off in Developer options, so other devices
+  on your Wi-Fi can't connect to the Fire TV. Turn it on again the next time you clean.
 
-- **Stop autoplaying trailers:** Settings → Preferences → **Featured Content** → turn off *Allow Video Autoplay* and *Allow Audio Autoplay*.
-- **Fewer targeted ads:** Settings → Preferences → **Privacy Settings** → turn off *Device Usage Data*, *Collect App Usage Data*, and *Interest-based Ads*.
-- **Quieter notifications:** Settings → Preferences → **Notification Settings** → turn off notifications for apps you don't want hearing from.
-- **Put your favorite apps first:** hold **Home** → **Apps**, highlight an app, press **☰ (menu)** → *Move to front*. Do your least favorite first and your top favorite last, so it ends up first. Amazon doesn't let a PC set this order.
-- **Delete leftover installers:** open **Downloader** → **Files**, select the `.apk` file, and choose **Delete**.
-- **Restart after cleaning:** Settings → My Fire TV → **Restart**, so the Stick starts without what you turned off.
-- **When you're done:** turn **ADB debugging** or **Wireless debugging** back off in Developer options, so other devices on your Wi-Fi can't connect to the Stick.
-- **Less storage creep:** Settings → Applications → **Manage Installed Applications** shows what's using space, if you want to check without a PC.
+**A fully different home screen?** Since Fire OS 7.6, Amazon blocks replacing its home screen. A launcher app from
+the Appstore (Projectivy, Wolf Launcher) or [Free My TV](https://github.com/simbasjungles/free-my-tv) can run as an
+app you open, but the Home button still goes back to Amazon's.
 
-### Want a fully ad-free home screen?
+## Undo everything
 
-On Fire OS 7.6 and later, Amazon blocks replacing its home screen. What you can do is install a launcher app such as Projectivy Launcher or Wolf Launcher from the Amazon Appstore and open it as your main screen. Free My TV can also run on the Stick as an app this way. Pressing Home will still go back to Amazon's screen, though, so expect a workaround rather than a full replacement.
+```bash
+python3 firestick.py restore
+```
+or option 5 in the menu. It turns back on everything recorded in `firestick-turned-off.json`, next to the script,
+including the animation speed. Keep that file. Without it, Settings → My Fire TV → **Reset to Factory Defaults**
+also brings everything back (and erases your apps).
+
+## Why not Free My TV?
+
+[Free My TV](https://github.com/simbasjungles/free-my-tv), which inspired this project, is a new home screen for
+Google TV, LG and Samsung. On Fire TV it can only run as an app you open, since Amazon keeps the Home button, and it
+doesn't free space or turn off Amazon's extras. This tool does that part.
+
+## License
+
+© 2026 Balraj Parsi. All rights reserved. You may run it on devices you own for personal use; copying, modifying or
+redistributing it needs permission. See [LICENSE](LICENSE). Not affiliated with Amazon. Use at your own risk.

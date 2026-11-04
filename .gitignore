@@ -1,1 +1,5 @@
 firestick-turned-off.json
+platform-tools/
+platform-tools.zip
+__pycache__/
+*.pyc

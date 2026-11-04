@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free My Fire Stick: free up space and clear the clutter on your Fire TV</title>
+<meta name="description" content="Free up space, turn off Amazon's ads and telemetry, and keep only the apps you use on your Fire TV Stick. Mac, Windows or Linux. No root. Every change can be undone.">
+<style>
+  :root { --bg: #0b1020; --panel: #141b31; --line: #263052; --text: #e8ecf8; --muted: #9aa5c4; --accent: #ff9f1c; --ok: #4ade80; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #1d2a55 0%, var(--bg) 60%); color: var(--text);
+         font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100vh; }
+  main { max-width: 920px; margin: 0 auto; padding: 56px 24px 80px; }
+  h1 { font-size: clamp(36px, 6vw, 56px); line-height: 1.05; margin: 0 0 16px; letter-spacing: -0.02em; }
+  h1 span { color: var(--accent); }
+  h2 { font-size: 26px; margin: 56px 0 16px; }
+  .lead { font-size: 20px; color: var(--muted); max-width: 640px; margin: 0 0 28px; }
+  .btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  a.btn { display: inline-block; padding: 12px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; }
+  a.primary { background: var(--accent); color: #1a1205; }
+  a.ghost { border: 1px solid var(--line); color: var(--text); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 40px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .stat b { display: block; font-size: 30px; color: var(--ok); }
+  .stat small { color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .card h3 { margin: 0 0 6px; font-size: 18px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  ol { padding-left: 22px; } li { margin: 8px 0; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; }
+  pre { background: #070b16; border: 1px solid var(--line); border-radius: 12px; padding: 16px; overflow-x: auto; }
+  blockquote { margin: 12px 0; padding: 14px 18px; background: var(--panel); border-left: 3px solid var(--accent); border-radius: 8px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tabs button { background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 15px; cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--accent); color: #1a1205; border-color: var(--accent); }
+  [role="tabpanel"][hidden] { display: none; }
+  footer { margin-top: 64px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 20px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Free My <span>Fire Stick</span></h1>
+  <p class="lead">Free up space, turn off Amazon's ads and telemetry, and keep only the apps you actually use.
+    Mac, Windows or Linux. No root. Every change can be undone.</p>
+  <div class="btns">
+    <a class="btn primary" href="https://github.com/balrajparsi/free-my-firestick/archive/refs/heads/main.zip">Download</a>
+    <a class="btn ghost" href="https://github.com/balrajparsi/free-my-firestick">View on GitHub</a>
+  </div>
+
+  <div class="stats" aria-label="Tested on a Fire TV Stick 4K">
+    <div class="stat"><b>610 MB</b><small>storage freed</small></div>
+    <div class="stat"><b>27</b><small>Amazon extras turned off</small></div>
+    <div class="stat"><b>2&times;</b><small>faster menu animations</small></div>
+    <div class="stat"><b>1 command</b><small>to undo it all</small></div>
+  </div>
+  <p style="color:var(--muted);font-size:14px">Measured on a Fire TV Stick 4K, Fire OS 8.1, with 14 apps installed.</p>
+
+  <h2>What you get</h2>
+  <div class="grid">
+    <div class="card"><h3>More space</h3><p>Clears every app's cache, shows the biggest apps, and finds leftover installers from Downloader.</p></div>
+    <div class="card"><h3>Only your apps</h3><p>Lists what you installed, with sizes, and uninstalls only what you pick.</p></div>
+    <div class="card"><h3>Fewer ads</h3><p>Special Offers, the advertising ID, on-screen ad tracking, promo popups and autoplaying trailers: off.</p></div>
+    <div class="card"><h3>Less spying</h3><p>The services that upload usage, performance and logs to Amazon: off.</p></div>
+    <div class="card"><h3>Faster</h3><p>Turn off the Ambient screensaver (often the biggest RAM user) and halve menu animations.</p></div>
+    <div class="card"><h3>Safe</h3><p>Amazon apps are turned off, never uninstalled. Home screen, Settings, Appstore, updates and Alexa voice are never touched.</p></div>
+  </div>
+
+  <h2>Install</h2>
+  <p><b>On the Fire TV:</b> Settings → My Fire TV → About → select the device name 7 times. Then Developer options → turn on
+    <b>ADB debugging</b> (or <b>Wireless debugging</b>) and choose <b>Allow</b> when asked.</p>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" aria-controls="t-ai" id="b-ai">AI assistant</button>
+    <button role="tab" aria-selected="false" aria-controls="t-mac" id="b-mac">Mac</button>
+    <button role="tab" aria-selected="false" aria-controls="t-win" id="b-win">Windows</button>
+    <button role="tab" aria-selected="false" aria-controls="t-term" id="b-term">Terminal</button>
+  </div>
+  <div role="tabpanel" id="t-ai" aria-labelledby="b-ai">
+    <p>Open <a href="https://claude.com/claude-code">Claude Code</a> (or another AI coding assistant) and say:</p>
+    <blockquote>Clean up my Fire Stick with Free My Fire Stick (github.com/balrajparsi/free-my-firestick).</blockquote>
+    <p>It finds your Fire TV, shows what takes space, and asks before changing anything.</p>
+  </div>
+  <div role="tabpanel" id="t-mac" aria-labelledby="b-mac" hidden>
+    <ol><li><a href="https://github.com/balrajparsi/free-my-firestick/archive/refs/heads/main.zip">Download</a> and unzip.</li>
+      <li>Right-click <code>start.command</code> → <b>Open</b> (double-click after the first time).</li>
+      <li>On the TV, tick <i>Always allow</i> and choose <b>Allow</b>.</li></ol>
+  </div>
+  <div role="tabpanel" id="t-win" aria-labelledby="b-win" hidden>
+    <ol><li><a href="https://github.com/balrajparsi/free-my-firestick/archive/refs/heads/main.zip">Download</a> and unzip.</li>
+      <li>Double-click <code>start.bat</code>. If Python is missing it installs it; then double-click again.</li>
+      <li>On the TV, tick <i>Always allow</i> and choose <b>Allow</b>.</li></ol>
+  </div>
+  <div role="tabpanel" id="t-term" aria-labelledby="b-term" hidden>
+<pre>git clone https://github.com/balrajparsi/free-my-firestick
+cd free-my-firestick
+python3 firestick.py</pre>
+    <p>It finds the Fire TV on your Wi-Fi and downloads Google's official adb if you don't have it.</p>
+  </div>
+
+  <h2>Undo everything</h2>
+<pre>python3 firestick.py restore</pre>
+
+  <footer>© 2026 Balraj Parsi. All rights reserved. Not affiliated with Amazon. Inspired by
+    <a href="https://github.com/simbasjungles/free-my-tv">Free My TV</a>.</footer>
+</main>
+<script>
+  document.querySelectorAll('[role="tab"]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('[role="tab"]').forEach(function (t) {
+        t.setAttribute('aria-selected', t === tab);
+        document.getElementById(t.getAttribute('aria-controls')).hidden = t !== tab;
+      });
+    });
+  });
+</script>
+</body>
+</html>
